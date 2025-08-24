@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Carta para Maddy</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Comic Sans MS', cursive;
+      background: #000;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    #contadorFecha {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: clamp(40px, 10vw, 100px);
+      font-weight: bold;
+      color: #ff1493;
+      user-select: none;
+      z-index: 10;
+      opacity: 1;
+      transition: opacity 1s ease;
+    }
+
+    @keyframes pop {
+      0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+      50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    }
+
+    canvas#fuegos {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: #000;
+      display: none;
+      z-index: 5;
+    }
+
+    #lluvia {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 4;
+      background: transparent;
+      display: none;
+    }
+
+    .texto-lluvia {
+      position: absolute;
+      font-size: 24px;
+      font-weight: bold;
+      user-select: none;
+      animation-name: caer;
+      animation-timing-function: linear;
+      animation-iteration-count: 1;
+      pointer-events: none;
+      opacity: 1;
+    }
+
+    @keyframes caer {
+      0% { top: -30px; opacity: 1; }
+      90% { opacity: 1; }
+      100% { top: 110vh; opacity: 0; }
+    }
+
+    .portada, .contenido {
+      height: 100vh; width: 100vw;
+      position: absolute;
+      top: 0; left: 0;
+    }
+
+    .portada {
+      background: linear-gradient(to top right, #ffb6c1, #ffc0cb);
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      z-index: 3;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1s ease;
+    }
+    .portada.visible { opacity: 1; pointer-events: auto; }
+
+    .portada h1 { font-size: 48px; color: #8b008b; }
+
+    .boton {
+      margin-top: 20px; padding: 15px 30px;
+      font-size: 20px;
+      background-color: #ff69b4; border: none;
+      border-radius: 20px; color: white;
+      cursor: pointer; transition: 0.3s;
+      animation: pulse 1.5s infinite;
+    }
+    .boton:hover { background-color: #ff1493; }
+
+    @keyframes pulse {
+      0%,100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    .contenido {
+      background: linear-gradient(to top right, #ffe0f0, #fff8fb);
+      color: #8b008b;
+      padding: 40px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      opacity: 0; transform: scale(0.8);
+      pointer-events: none;
+      transition: opacity 1s ease, transform 1s ease;
+      z-index: 2;
+    }
+    .contenido.visible { opacity: 1; transform: scale(1); pointer-events: auto; }
+
+    #tituloAnimado {
+      font-size: 60px;
+      white-space: pre;
+      min-height: 80px;
+    }
+
+    .linea {
+      opacity: 0; transform: translateY(20px);
+      transition: opacity 1s ease, transform 1s ease;
+      font-size: 24px;
+      margin-top: 10px;
+      max-width: 700px;
+    }
+    .linea.show { opacity: 1; transform: translateY(0); }
+
+    img {
+      max-width: 300px; margin-top: 20px;
+      border-radius: 20px;
+      box-shadow: 0 0 20px pink;
+      opacity: 0; transform: translateY(20px);
+      transition: 1s ease;
+    }
+    img.show { opacity: 1; transform: translateY(0); }
+
+    .footer {
+      margin-top: 40px; font-size: 18px;
+      color: #4b0082; opacity: 0;
+      transform: translateY(20px);
+      transition: 1s ease;
+    }
+    .footer.show { opacity: 1; transform: translateY(0); }
+
+    .balloon {
+      position: absolute;
+      width: 60px; height: 80px;
+      border-radius: 50%;
+      animation: float 6s linear infinite;
+      opacity: 0.8;
+    }
+    .balloon::after {
+      content: "";
+      position: absolute;
+      width: 2px; height: 40px;
+      background: #aaa;
+      top: 80px; left: 50%;
+      transform: translateX(-50%);
+    }
+    @keyframes float {
+      0% { bottom: -100px; transform: translateX(0); }
+      100% { bottom: 110%; transform: translateX(-20px); }
+    }
+    .b1 { left: 10%; background-color: #ff6f91; animation-delay: 0s; }
+    .b2 { left: 30%; background-color: #ffc75f; animation-delay: 2s; }
+    .b3 { left: 50%; background-color: #845ec2; animation-delay: 4s; }
+    .b4 { left: 70%; background-color: #00c9a7; animation-delay: 1s; }
+    .b5 { left: 90%; background-color: #f9f871; animation-delay: 3s; }
+
+    @media (max-width: 600px) {
+      #tituloAnimado { font-size: 40px; }
+      .linea { font-size: 18px; }
+      img { max-width: 200px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="contadorFecha"></div>
+  <canvas id="fuegos"></canvas>
+  <div id="lluvia"></div>
+
+  <div class="portada" id="portada">
+    <h1>💌 Para Maddy, con cariño</h1>
+    <button class="boton" onclick="abrirCarta()">Abrir carta</button>
+  </div>
+
+  <div class="contenido" id="contenido">
+    <div class="balloon b1"></div>
+    <div class="balloon b2"></div>
+    <div class="balloon b3"></div>
+    <div class="balloon b4"></div>
+    <div class="balloon b5"></div>
+
+    <h1 id="tituloAnimado"></h1>
+
+    <div class="linea" id="l1">Hoy celebramos a una persona muy especial 💖</div>
+    <div class="linea" id="l2">Espero que hoy tengas un gran día, lleno de buenos momentos y rodeada de la gente que te quiere.</div>
+    <div class="linea" id="l3">Te mereces lo mejor en este nuevo año de vida.</div>
+    <div class="linea" id="l4">¡A seguir cumpliendo metas y disfrutando cada momento! 💫</div>
+
+    <img id="imagen" src="https://i.pinimg.com/736x/58/c7/ae/58c7ae3e6d438584dad7a5d06bf0c543.jpg" alt="Torta de cumpleaños decorada con velas" />
+
+    <div class="footer" id="firma">
+      Con todo mi cariño,<br />💌
+    </div>
+
+    <audio id="musica" loop>
+      <source src="https://cdn.pixabay.com/download/audio/2025/04/30/audio_9834479b67.mp3?filename=happy-birthday-334876.mp3" type="audio/mpeg" />
+      Tu navegador no soporta audio HTML5.
+    </audio>
+
+    <audio id="explosion1">
+      <source src="" type="audio/mpeg">
+    </audio>
+    <audio id="explosion2">
+      <source src="" type="audio/mpeg">
+    </audio>
+  </div>
+
+  <script>
+    const contadorFechaDiv = document.getElementById('contadorFecha');
+    const portada = document.getElementById('portada');
+    const contenido = document.getElementById('contenido');
+    const lluvia = document.getElementById('lluvia');
+    const canvas = document.getElementById('fuegos');
+    const ctx = canvas.getContext('2d');
+    let lluviaInterval;
+
+    const explosionSounds = [
+      document.getElementById('explosion1'),
+      document.getElementById('explosion2')
+    ];
+
+    // Ajustar tamaño canvas
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // --- Fuegos artificiales ---
+    let fireworks = [];
+    class Firework {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = canvas.height;
+        this.targetY = Math.random() * (canvas.height/2);
+        this.color = `hsl(${Math.random()*360},100%,50%)`;
+        this.particles = [];
+        this.done = false;
+      }
+      update() {
+        this.y -= 5;
+        if (this.y <= this.targetY) {
+          this.explode();
+          this.done = true;
+        }
+      }
+      explode() {
+        for (let i=0;i<150;i++) {
+          this.particles.push(new Particle(this.x,this.y,this.color));
+        }
+        // Reproducir sonido aleatorio
+        const sound = explosionSounds[Math.floor(Math.random()*explosionSounds.length)];
+        sound.currentTime=0;
+        sound.play().catch(()=>{});
+      }
+      draw() {
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x,this.y,4,4);
+      }
+    }
+    class Particle {
+      constructor(x,y,color) {
+        this.x=x; this.y=y;
+        this.vx=(Math.random()-0.5)*4;
+        this.vy=(Math.random()-0.5)*4;
+        this.alpha=1;
+        this.color=color;
+      }
+      update(){
+        this.x+=this.vx; this.y+=this.vy;
+        this.vy+=0.05;
+        this.alpha-=0.0008;
+      }
+      draw(){
+        ctx.globalAlpha=this.alpha;
+        ctx.fillStyle=this.color;
+        ctx.fillRect(this.x,this.y,2,2);
+        ctx.globalAlpha=1;
+      }
+    }
+
+    function animateFireworks() {
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      if(Math.random()<0.05) fireworks.push(new Firework());
+      fireworks.forEach((fw,i)=>{
+        if(!fw.done){ fw.update(); fw.draw(); }
+        fw.particles.forEach((p,pi)=>{
+          p.update(); p.draw();
+          if(p.alpha<=0) fw.particles.splice(pi,1);
+        });
+        if(fw.done && fw.particles.length===0) fireworks.splice(i,1);
+      });
+      requestAnimationFrame(animateFireworks);
+    }
+
+    // --- Lluvia de corazones ---
+    const textoLluvia = "❤️❤️❤️";
+    function iniciarLluvia() {
+      lluvia.style.display="block";
+      let index=0;
+      const colores=['#ff1493','#ff69b4','#ffc0cb','#ff6f91','#f9f871','#00c9a7','#845ec2'];
+      lluviaInterval = setInterval(()=>{
+        if(index>=textoLluvia.length) index=0;
+        const letra = textoLluvia.charAt(index);
+        if(letra===" "){index++;return;}
+        const span=document.createElement("span");
+        span.textContent=letra;
+        span.classList.add("texto-lluvia");
+        span.style.color=colores[Math.floor(Math.random()*colores.length)];
+        span.style.left=Math.random()*(window.innerWidth-20)+"px";
+        const duracion=6000+Math.random()*4000;
+        span.style.animationDuration=duracion+"ms";
+        span.style.fontSize=(20+Math.random()*8)+"px";
+        lluvia.appendChild(span);
+        setTimeout(()=>{if(lluvia.contains(span))lluvia.removeChild(span)},duracion);
+        index++;
+      },80);
+    }
+
+    function detenerLluvia() {
+      clearInterval(lluviaInterval);
+      lluvia.innerHTML='';
+      lluvia.style.display='none';
+    }
+
+    // --- Secuencia inicial ---
+    function animarContador(callback){
+      const numeros=['3','2','1'];
+      let index=0;
+      function mostrarNumero(){
+        if(index<numeros.length){
+          contadorFechaDiv.textContent=numeros[index];
+          contadorFechaDiv.style.animation='none';
+          void contadorFechaDiv.offsetWidth;
+          contadorFechaDiv.style.animation='pop 0.8s ease forwards';
+          index++;
+          setTimeout(mostrarNumero,1000);
+        } else { callback(); }
+      }
+      mostrarNumero();
+    }
+
+    function mostrarFecha(callback){
+      contadorFechaDiv.textContent='26/08/2025';
+      contadorFechaDiv.style.animation='none';
+      void contadorFechaDiv.offsetWidth;
+      contadorFechaDiv.style.animation='pop 1s ease forwards';
+      setTimeout(callback,2000);
+    }
+
+    function mostrarFuegos(callback){
+      canvas.style.display="block";
+      animateFireworks();
+      setTimeout(()=>{
+        canvas.style.display="none";
+        callback();
+      },14000);
+    }
+
+    function mostrarPortada(){
+      contadorFechaDiv.style.opacity='0';
+      setTimeout(()=>{
+        contadorFechaDiv.style.display='none';
+        portada.classList.add('visible');
+      },1000);
+    }
+
+    window.onload=()=>{
+      animarContador(()=>{
+        mostrarFecha(()=>{
+          mostrarFuegos(()=>{
+            iniciarLluvia();
+            setTimeout(mostrarPortada,8000);
+          });
+        });
+      });
+    };
+
+    // --- Carta ---
+    function abrirCarta() {
+      detenerLluvia();
+      portada.style.opacity='0';
+      setTimeout(()=>{
+        portada.style.display='none';
+        contenido.classList.add('visible');
+        escribirTitulo("🎂 ¡Feliz Cumpleaños Maddy! 🎉");
+        const musica=document.getElementById("musica");
+        musica.currentTime=0;
+        musica.volume=0.9;
+        musica.play().catch(err=>console.log("Autoplay bloqueado:",err));
+      },1000);
+    }
+
+    function escribirTitulo(texto){
+      const elemento=document.getElementById("tituloAnimado");
+      elemento.textContent="";
+      let i=0;
+      const intervalo=setInterval(()=>{
+        elemento.textContent+=texto.charAt(i);
+        i++;
+        if(i>=texto.length){clearInterval(intervalo);animarLineas();}
+      },100);
+    }
+
+    function animarLineas(){
+      const delay=600;
+      const lineas=['l1','l2','l3','l4'];
+      lineas.forEach((id,index)=>{
+        setTimeout(()=>{document.getElementById(id).classList.add('show');},delay*index);
+      });
+      setTimeout(()=>{
+        document.getElementById("imagen").classList.add("show");
+        document.getElementById("firma").classList.add("show");
+      },delay*lineas.length+500);
+    }
+  </script>
+</body>
+</html>
